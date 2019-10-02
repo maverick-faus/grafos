@@ -1,20 +1,32 @@
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class MainGrafo {
     public static void main(String args[]) {
         Grafo g1 = new Grafo();
         // aristas,nodos,dirigido,autociclo
-        g1.ErdosRenyi(10, 5, true, true);
+        //g1.ErdosRenyi(10000,500, false, false);
 
         // nodos,proba,dirigido,autociclo
-        g1.Gilbert(5, (float) 0.5, true, true);
-        g1 = new Grafo();
+        //g1.Gilbert(500, (float) 0.5, false, false);
+        //g1 = new Grafo();
 
         // nodos,distancia,dirigido,autociclo
-        g1.Geo(5, .1, true, true);
-        g1 = new Grafo();
+        //g1.Geo(500, .5, false, false);
+        
+       
 
         // nodos,factor,dirigido,autociclo
-        g1.BarabasiAlbert(5, 5, true, true);
+        g1.BarabasiAlbert(500, 20, true, true);
+
+      Grafo arbolbfs = g1.BFS(1);
+      arbolbfs.WriteFile("Barabasi_BFS", false, arbolbfs.numNodos());
+
+      
+      Grafo arboldfsr = g1.DFS_R(1);
+      arboldfsr.WriteFile("Barabasi_DFS_R", false, arboldfsr.numNodos());
+
+      Grafo arboldfsi = g1.DFS_I(1);
+      arboldfsi.WriteFile("Barabasi_DFS_I", false, arboldfsi.numNodos());
     }
 }

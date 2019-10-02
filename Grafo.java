@@ -1,5 +1,8 @@
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Stack;
 import java.util.Random;
+import java.util.PriorityQueue;
 import java.util.List;
 import java.io.FileWriter;
 
@@ -11,6 +14,16 @@ public class Grafo {
     public Grafo() {
         nodos = new HashMap<Integer, Nodo>();
         aristas = new HashMap<Integer, Arista>();
+    }
+
+    public Grafo(int n) {
+        nodos = new HashMap<Integer, Nodo>();
+        aristas = new HashMap<Integer, Arista>();
+
+        for (int i = 1; i <= n; i++) {
+            Nodo auxNodo = new Nodo(i);
+            nodos.put(i, auxNodo);
+        }
     }
 
     public void ErdosRenyi(int m, int n, boolean dirigido, boolean autociclo) {
@@ -27,7 +40,6 @@ public class Grafo {
             Nodo auxNodo = new Nodo(i);
             nodos.put(i, auxNodo);
         }
-
         // Generating m random edges
         do {
             int randomNode1 = (int) (n * Math.random()) + 1;
@@ -149,13 +161,6 @@ public class Grafo {
                 double distanciaNodos = distancia(firstEntry.getValue(), lastEntry.getValue());
 
                 if (firstEntry.getValue().idNodo != lastEntry.getValue().idNodo || autociclo == true) {
-                    // System.out.println(firstEntry.getValue().idNodo + "-" +
-                    // lastEntry.getValue().idNodo+":"+distanciaNodos);
-                    // System.out.println(firstEntry.getValue().atributes.get("x") + "," +
-                    // firstEntry.getValue().atributes.get("y"));
-                    // System.out.println(lastEntry.getValue().atributes.get("x") + "," +
-                    // lastEntry.getValue().atributes.get("y"));
-
                     if (aristas.isEmpty()) {
                         if (distanciaNodos <= r) {
 
@@ -180,10 +185,8 @@ public class Grafo {
                             }
                         } else
                             existeArista = false;
-
                     }
                 }
-
             }
         }
         WriteFile("Geo", dirigido, n);
@@ -197,7 +200,7 @@ public class Grafo {
         for (int i = 1; i <= n; i++) {
             Nodo auxNodo = new Nodo(i);
 
-            //System.out.println("Nodo Actual: " + i);
+            // System.out.println("Nodo Actual: " + i);
             for (HashMap.Entry<Integer, Nodo> firstEntry : nodos.entrySet()) {
                 Arista auxArista = new Arista();
                 HashMap aristasAux = new HashMap<Integer, Arista>(this.aristas);
@@ -205,15 +208,13 @@ public class Grafo {
                 auxArista.n1 = auxNodo;
                 auxArista.n2 = firstEntry.getValue();
                 gradoNodo = auxNodo.grado(aristasAux, firstEntry.getValue());
-                //System.out.println("\nNodo a Probar: " + firstEntry.getValue().idNodo);
+                // System.out.println("\nNodo a Probar: " + firstEntry.getValue().idNodo);
                 prob = 1 - (gradoNodo / d);
-                //System.out.println("Probabilidad: " + prob);
+                // System.out.println("Probabilidad: " + prob);
                 if (Math.random() < prob) {
                     auxNodo.hasArista = true;
                     firstEntry.getValue().hasArista = true;
                     aristas.put(idA, auxArista);
-                    //System.out.println("Control arista " + auxArista.n1.idNodo + "," + auxArista.n2.idNodo);
-                    //System.out.println("Conectado");
                     idA++;
                 }
                 if (dirigido) {
@@ -240,7 +241,7 @@ public class Grafo {
                     idA++;
                 }
             }
-       }
+        }
 
         WriteFile("BarabasiAlbert", dirigido, n);
         metodo = "BarabasiAlbert";
@@ -295,7 +296,6 @@ public class Grafo {
                     fw.write(entry.getValue().idNodo + ";\n");
                 }
             }
-
             fw.write("}");
             fw.close();
         } catch (Exception e) {
@@ -304,4 +304,144 @@ public class Grafo {
         System.out.println("File " + name + ".gv Generated Successfully...");
     }
 
+    public int numNodos() {
+        return this.nodos.size();
+    }
+
+    public HashSet<Nodo> obtieneAdyacentes(int i) {
+        HashSet<Nodo> nodosAdyacentes = new HashSet<Nodo>();
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            if (entry.getValue().n1.idNodo == i) {
+                nodosAdyacentes.add(entry.getValue().n2);
+            } else {
+                if (entry.getValue().n2.idNodo == i) {
+                    nodosAdyacentes.add(entry.getValue().n1);
+                }
+            }
+        }
+        return nodosAdyacentes;
+    }
+
+    public Grafo BFS(int s) {
+        int nodoSize = this.numNodos();
+        //// OJo aqui
+        Grafo arbol = new Grafo();
+        Boolean[] discovered = new Boolean[nodoSize + 1];
+        discovered[s] = true;
+        PriorityQueue<Integer> L = new PriorityQueue<Integer>();
+        int idA = 1;
+
+        for (int i = 1; i <= nodoSize; i++) {
+            if (i != s) {
+                discovered[i] = false;
+            }
+        }
+        L.add(s);
+
+        while (L.peek() != null) {
+            int u = L.poll();
+            HashSet<Nodo> adyacentes = this.obtieneAdyacentes(u);
+            for (Nodo n : adyacentes) {
+                if (!discovered[n.idNodo]) {
+
+                    Arista auxArista = new Arista();
+                    Nodo auxNodo = new Nodo(u);
+                    Nodo auxNodo2 = new Nodo(n.idNodo);
+                    arbol.nodos.put(u, auxNodo);
+                    arbol.nodos.put(n.idNodo, auxNodo2);
+
+                    auxArista.setIdArista(idA);
+                    auxArista.n1 = new Nodo(u);
+                    auxArista.n2 = new Nodo(n.idNodo);
+                    arbol.nodos.get(u).hasArista = true;
+                    arbol.nodos.get(n.idNodo).hasArista = true;
+                    arbol.aristas.put(idA, auxArista);
+                    idA++;
+                    discovered[n.idNodo] = true;
+                    L.add(n.idNodo);
+                }
+            }
+        }
+        return arbol;
+    }
+
+    public Grafo DFS_R(int s) {
+        int nodoSize = this.numNodos();
+        Grafo arbol = new Grafo();
+
+        Boolean[] discovered = new Boolean[nodoSize + 1];
+        for (int i = 1; i <= nodoSize; i++) {
+            discovered[i] = false;
+        }
+        rDFS(s, discovered, arbol, 1);
+        return arbol;
+    }
+
+    private void rDFS(int u, Boolean[] discovered, Grafo arbol, int idAr) {
+        discovered[u] = true;
+        HashSet<Nodo> adyacentes = this.obtieneAdyacentes(u);
+        for (Nodo n : adyacentes) {
+            if (!discovered[n.idNodo]) {
+
+                while (arbol.aristas.get(idAr) != null) {
+                    idAr++;
+                }
+                Arista auxArista = new Arista();
+                Nodo auxNodo = new Nodo(u);
+                Nodo auxNodo2 = new Nodo(n.idNodo);
+                arbol.nodos.put(u, auxNodo);
+                arbol.nodos.put(n.idNodo, auxNodo2);
+
+                auxArista.setIdArista(idAr);
+                auxArista.n1 = new Nodo(u);
+                auxArista.n2 = new Nodo(n.idNodo);
+                arbol.nodos.get(u).hasArista = true;
+                arbol.nodos.get(n.idNodo).hasArista = true;
+                arbol.aristas.put(idAr, auxArista);
+
+                rDFS(n.idNodo, discovered, arbol, idAr + 1);
+            }
+        }
+    }
+
+    public Grafo DFS_I(int s) {
+        int nodoSize = this.numNodos();
+        int idA = 1;
+        Grafo arbol = new Grafo();
+        Boolean[] explored = new Boolean[nodoSize + 1];
+        Stack<Integer> S = new Stack<Integer>();
+        Integer[] parent = new Integer[nodoSize + 1];
+        for (int i = 0; i <= nodoSize; i++) {
+            explored[i] = false;
+        }
+        S.push(s);
+        while (!S.isEmpty()) {
+
+            int u = S.pop();
+            if (!explored[u]) {
+                explored[u] = true;
+                if (u != s) {
+                    Arista auxArista = new Arista();
+                    Nodo auxNodo = new Nodo(u);
+                    Nodo auxNodo2 = new Nodo(parent[u]);
+                    arbol.nodos.put(u, auxNodo);
+                    arbol.nodos.put(parent[u], auxNodo2);
+
+                    auxArista.setIdArista(idA);
+                    auxArista.n1 = new Nodo(u);
+                    auxArista.n2 = new Nodo(parent[u]);
+                    arbol.nodos.get(u).hasArista = true;
+                    arbol.nodos.get(parent[u]).hasArista = true;
+                    arbol.aristas.put(idA, auxArista);
+                    idA++;
+                }
+                HashSet<Nodo> aristas = this.obtieneAdyacentes(u);
+                for (Nodo n : aristas) {
+                    S.push(n.idNodo);
+                    parent[n.idNodo] = u;
+                }
+            }
+        }
+        return arbol;
+    }
 }
