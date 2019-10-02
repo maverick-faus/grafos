@@ -377,7 +377,7 @@ public class Grafo {
         return arbol;
     }
 
-    private void rDFS(int u, Boolean[] discovered, Grafo arbol, int idAr) {
+    public void rDFS(int u, Boolean[] discovered, Grafo arbol, int idAr) {
         discovered[u] = true;
         HashSet<Nodo> adyacentes = this.obtieneAdyacentes(u);
         for (Nodo n : adyacentes) {
