@@ -5,7 +5,7 @@ public class MainGrafo {
   public static void main(String args[]) {
     Grafo g1 = new Grafo();
     // aristas,nodos,dirigido,autociclo
-   // g1.ErdosRenyi(10000, 500, false, false);
+    //g1.ErdosRenyi(10000, 500, false, false);
     
 
 
@@ -14,10 +14,10 @@ public class MainGrafo {
     // g1 = new Grafo();
 
     // nodos,distancia,dirigido,autociclo
-    // g1.Geo(500, .5, false, false);
+    // g1.Geo(30, .5, false, false);
 
     // nodos,factor,dirigido,autociclo
-     g1.BarabasiAlbert(500, 30, false, false);
+     g1.BarabasiAlbert(30, 5, false, false);
 
 
 
@@ -35,7 +35,7 @@ public class MainGrafo {
     g1.RandomEdgeValues(1, 50);
     Grafo dijk1 = g1.Dijkstra(1);
 
-    dijk1.WriteFileDijkstra("Dijkstra_Geo", false, dijk1.numNodos());
+    dijk1.WriteFileDijkstra("Dijkstra_Barabasi", false, dijk1.numNodos());
 
 
   }

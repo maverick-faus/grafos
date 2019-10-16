@@ -297,11 +297,11 @@ public class Grafo {
             else
                 fw.write("graph " + name + " {\n");
             for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
-                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + ";\n");
+                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + " [ label=\" "+ String.format("%.2f", entry.getValue().peso)+"\" ];\n");
             }
 
             for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
-                fw.write(entry.getValue().idNodo + " [xlabel=\"" + String.format("%.2f", entry.getValue().distancia)
+                fw.write(entry.getValue().idNodo + " [label=\"" + String.format("%.2f", entry.getValue().distancia)
                         + "\"]\n");
 
             }
@@ -525,15 +525,15 @@ public class Grafo {
         Grafo arbol = new Grafo(this.numNodos());
         int nodoDestino;
         double infinito = Double.POSITIVE_INFINITY;
-        Integer[] padres = new Integer[arbol.numNodos()];
+        Integer[][] padres = new Integer[arbol.numNodos()][2];
 
         for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
             entry.getValue().distancia = infinito;
-            padres[entry.getValue().idNodo - 1] = null;
+            padres[entry.getValue().idNodo - 1][0] = null;
         }
 
         this.nodos.get(s).distancia = 0.0;
-        padres[s - 1] = s;
+        padres[s - 1][0] = s;
 
         PriorityQueue<Nodo> distPQ = new PriorityQueue<>(compCola);
         for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
@@ -554,7 +554,8 @@ public class Grafo {
 
                 if (this.nodos.get(nodoDestino).distancia > this.nodos.get(u.idNodo).distancia + e.peso) {
                     this.nodos.get(nodoDestino).distancia = this.nodos.get(u.idNodo).distancia + e.peso;
-                    padres[nodoDestino - 1] = u.idNodo;
+                    padres[nodoDestino - 1][0] = u.idNodo;
+                    padres[nodoDestino - 1][1] = e.idArista;
                 }
             }
 
@@ -564,11 +565,13 @@ public class Grafo {
             Arista auxArista = new Arista();
             auxArista.setIdArista(i);
             auxArista.n1 = arbol.nodos.get(i);
-            auxArista.n2 = arbol.nodos.get(padres[i - 1]);
+            auxArista.n2 = arbol.nodos.get(padres[i - 1][0]);
+            if(padres[i - 1][1] != null)
+                auxArista.peso=this.aristas.get(padres[i - 1][1]).peso;
             if (auxArista.n1.idNodo != auxArista.n2.idNodo)
                 arbol.aristas.put(i, auxArista);
             arbol.nodos.get(i).hasArista = true;
-            arbol.nodos.get(padres[i - 1]).hasArista = true;
+            arbol.nodos.get(padres[i - 1][0]).hasArista = true;
             arbol.nodos.get(i).distancia = this.nodos.get(i).distancia;
         }
         return arbol;
