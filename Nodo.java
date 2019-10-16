@@ -4,7 +4,7 @@ public class Nodo
     public int idNodo;
     public HashMap<String, Double> atributes;
     public boolean hasArista;
-
+    public double distancia;
     public Nodo()
     {
 

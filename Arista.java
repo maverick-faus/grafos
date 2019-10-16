@@ -4,6 +4,7 @@ public class Arista
     public int idArista;
     public Nodo n1;
     public Nodo n2;
+    public double peso;
     public HashMap<String, String> atributes;
 
     public void setIdArista(int newId)

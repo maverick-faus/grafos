@@ -4,6 +4,7 @@ import java.util.Stack;
 import java.util.Random;
 import java.util.PriorityQueue;
 import java.util.List;
+import java.util.Comparator;
 import java.io.FileWriter;
 
 public class Grafo {
@@ -266,9 +267,50 @@ public class Grafo {
         for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
             System.out.println("Llave: " + entry.getKey());
             System.out.println("idArista: " + entry.getValue().idArista);
+            System.out.println("Peso: " + entry.getValue().peso);
             System.out.println(entry.getValue().n1.idNodo + "--" + entry.getValue().n2.idNodo);
             System.out.println("");
         }
+    }
+
+    Comparator<Nodo> compCola = new Comparator<Nodo>() {
+        @Override
+        public int compare(Nodo n1, Nodo n2) {
+            return Double.compare(n1.distancia, n2.distancia);
+        }
+    };
+
+    public void WriteFileDijkstra(String name, boolean dir, int n) {
+        String conector_gv;
+        if (dir) {
+            name = name + "_dir_" + n;
+            conector_gv = "->";
+        } else {
+            name = name + "_" + n;
+
+            conector_gv = "--";
+        }
+        try {
+            FileWriter fw = new FileWriter(name + ".gv");
+            if (dir)
+                fw.write("digraph " + name + " {\n");
+            else
+                fw.write("graph " + name + " {\n");
+            for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + ";\n");
+            }
+
+            for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
+                fw.write(entry.getValue().idNodo + " [xlabel=\"" + String.format("%.2f", entry.getValue().distancia)
+                        + "\"]\n");
+
+            }
+            fw.write("}");
+            fw.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        System.out.println("File " + name + ".gv Generated Successfully...");
     }
 
     public void WriteFile(String name, boolean dir, int n) {
@@ -320,6 +362,21 @@ public class Grafo {
             }
         }
         return nodosAdyacentes;
+    }
+
+    public HashSet<Arista> obtieneIncidentes(int i) {
+        HashSet<Arista> aristasIncidentes = new HashSet<Arista>();
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            if (entry.getValue().n1.idNodo == i) {
+                aristasIncidentes.add(entry.getValue());
+            } else {
+                if (entry.getValue().n2.idNodo == i) {
+                    aristasIncidentes.add(entry.getValue());
+                }
+            }
+        }
+
+        return aristasIncidentes;
     }
 
     public Grafo BFS(int s) {
@@ -444,4 +501,79 @@ public class Grafo {
         }
         return arbol;
     }
+
+    public void RandomEdgeValues(double min, double max) {
+
+        Random rand = new Random();
+        double w;
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            w = rand.nextFloat() * (max - min) + min;
+            entry.getValue().peso = w;
+
+        }
+
+    }
+
+    public void printEdgeValues() {
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            System.out.println(entry.getValue().idArista + "-" + entry.getValue().peso);
+
+        }
+    }
+
+    public Grafo Dijkstra(int s) {
+        Grafo arbol = new Grafo(this.numNodos());
+        int nodoDestino;
+        double infinito = Double.POSITIVE_INFINITY;
+        Integer[] padres = new Integer[arbol.numNodos()];
+
+        for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
+            entry.getValue().distancia = infinito;
+            padres[entry.getValue().idNodo - 1] = null;
+        }
+
+        this.nodos.get(s).distancia = 0.0;
+        padres[s - 1] = s;
+
+        PriorityQueue<Nodo> distPQ = new PriorityQueue<>(compCola);
+        for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
+
+            distPQ.add(entry.getValue());
+        }
+
+        while (distPQ.peek() != null) {
+            Nodo u = distPQ.poll();
+
+            HashSet<Arista> aristas = this.obtieneIncidentes(u.idNodo);
+            for (Arista e : aristas) {
+                if (e.n1.idNodo == u.idNodo)
+                    nodoDestino = e.n2.idNodo;
+                else
+                    nodoDestino = e.n1.idNodo;
+                // System.out.println("ND "+ nodoDestino);
+
+                if (this.nodos.get(nodoDestino).distancia > this.nodos.get(u.idNodo).distancia + e.peso) {
+                    this.nodos.get(nodoDestino).distancia = this.nodos.get(u.idNodo).distancia + e.peso;
+                    padres[nodoDestino - 1] = u.idNodo;
+                }
+            }
+
+        }
+
+        for (int i = 1; i <= arbol.numNodos(); i++) {
+            Arista auxArista = new Arista();
+            auxArista.setIdArista(i);
+            auxArista.n1 = arbol.nodos.get(i);
+            auxArista.n2 = arbol.nodos.get(padres[i - 1]);
+            if (auxArista.n1.idNodo != auxArista.n2.idNodo)
+                arbol.aristas.put(i, auxArista);
+            arbol.nodos.get(i).hasArista = true;
+            arbol.nodos.get(padres[i - 1]).hasArista = true;
+            arbol.nodos.get(i).distancia = this.nodos.get(i).distancia;
+        }
+        return arbol;
+    }
+
+  
+
 }
