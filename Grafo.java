@@ -1,16 +1,12 @@
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Stack;
-import java.util.Random;
-import java.util.PriorityQueue;
-import java.util.List;
-import java.util.Comparator;
+import java.util.*;
 import java.io.FileWriter;
+import java.security.KeyStore.Entry;
 
 public class Grafo {
     public HashMap<Integer, Nodo> nodos = null;
     public HashMap<Integer, Arista> aristas = null;
     String metodo;
+    double suma = 0; // Suma de pesos del arbol de expansion minima
 
     public Grafo() {
         nodos = new HashMap<Integer, Nodo>();
@@ -297,7 +293,8 @@ public class Grafo {
             else
                 fw.write("graph " + name + " {\n");
             for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
-                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + " [ label=\" "+ String.format("%.2f", entry.getValue().peso)+"\" ];\n");
+                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + " [ label=\" "
+                        + String.format("%.2f", entry.getValue().peso) + "\" ];\n");
             }
 
             for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
@@ -346,6 +343,41 @@ public class Grafo {
         System.out.println("File " + name + ".gv Generated Successfully...");
     }
 
+    public void WriteFile(String name, boolean dir, int n, double peso) {
+        String conector_gv;
+        if (dir) {
+            name = name + "_dir_" + n;
+            conector_gv = "->";
+        } else {
+            name = name + "_noDir_" + n;
+
+            conector_gv = "--";
+        }
+        try {
+            FileWriter fw = new FileWriter(name + ".gv");
+            if (dir)
+                fw.write("digraph " + name + " {\n");
+            else
+                fw.write("graph " + name + " {\n");
+            fw.write("label = \"Peso del grafo: " + peso + "\";");
+            fw.write("labelloc =\"t\";"); // place the label at the top
+            for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+                fw.write(entry.getValue().n1.idNodo + conector_gv + entry.getValue().n2.idNodo + ";\n");
+            }
+
+            for (HashMap.Entry<Integer, Nodo> entry : nodos.entrySet()) {
+                if (!entry.getValue().hasArista) {
+                    fw.write(entry.getValue().idNodo + ";\n");
+                }
+            }
+            fw.write("}");
+            fw.close();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        System.out.println("File " + name + ".gv Generated Successfully...");
+    }
+
     public int numNodos() {
         return this.nodos.size();
     }
@@ -358,6 +390,20 @@ public class Grafo {
             } else {
                 if (entry.getValue().n2.idNodo == i) {
                     nodosAdyacentes.add(entry.getValue().n1);
+                }
+            }
+        }
+        return nodosAdyacentes;
+    }
+
+    public HashMap<Integer, Nodo> mapaAdyacentes(int i) {
+        HashMap<Integer, Nodo> nodosAdyacentes = new HashMap<Integer, Nodo>();
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            if (entry.getValue().n1.idNodo == i) {
+                nodosAdyacentes.put(entry.getValue().n2.idNodo, entry.getValue().n2);
+            } else {
+                if (entry.getValue().n2.idNodo == i) {
+                    nodosAdyacentes.put(entry.getValue().n1.idNodo, entry.getValue().n1);
                 }
             }
         }
@@ -517,8 +563,25 @@ public class Grafo {
     public void printEdgeValues() {
         for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
             System.out.println(entry.getValue().idArista + "-" + entry.getValue().peso);
-
         }
+    }
+
+    public double sumaTotalAristas() {
+        double d = 0;
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            d = d + entry.getValue().peso;
+        }
+        return d;
+    }
+
+    public int aristan1n2(int n_1, int n_2) {
+        int ida = 0;
+        for (HashMap.Entry<Integer, Arista> entry : aristas.entrySet()) {
+            if ((entry.getValue().n1.idNodo == n_1 && entry.getValue().n2.idNodo == n_2)
+                    || (entry.getValue().n2.idNodo == n_1 && entry.getValue().n1.idNodo == n_2))
+                ida = entry.getValue().idArista;
+        }
+        return ida;
     }
 
     public Grafo Dijkstra(int s) {
@@ -566,8 +629,8 @@ public class Grafo {
             auxArista.setIdArista(i);
             auxArista.n1 = arbol.nodos.get(i);
             auxArista.n2 = arbol.nodos.get(padres[i - 1][0]);
-            if(padres[i - 1][1] != null)
-                auxArista.peso=this.aristas.get(padres[i - 1][1]).peso;
+            if (padres[i - 1][1] != null)
+                auxArista.peso = this.aristas.get(padres[i - 1][1]).peso;
             if (auxArista.n1.idNodo != auxArista.n2.idNodo)
                 arbol.aristas.put(i, auxArista);
             arbol.nodos.get(i).hasArista = true;
@@ -577,6 +640,155 @@ public class Grafo {
         return arbol;
     }
 
-  
+    public HashMap<Integer, Arista> ordenaAristas(HashMap<Integer, Arista> hm, boolean desc) {
+        List<Map.Entry<Integer, Arista>> list = new LinkedList<Map.Entry<Integer, Arista>>(hm.entrySet());
 
+        Collections.sort(list, new Comparator<Map.Entry<Integer, Arista>>() {
+            public int compare(Map.Entry<Integer, Arista> o1, Map.Entry<Integer, Arista> o2) {
+                return Double.compare(o1.getValue().peso, o2.getValue().peso);
+            }
+        });
+        if (desc)
+            Collections.reverse(list);
+        HashMap<Integer, Arista> temp = new LinkedHashMap<Integer, Arista>();
+        for (Map.Entry<Integer, Arista> aa : list) {
+            temp.put(aa.getKey(), aa.getValue());
+        }
+        return temp;
+    }
+
+    public Grafo Kruskal_D() {
+        Grafo arbol = new Grafo(this.numNodos());
+
+        HashMap<Integer, Arista> aristas_sort = ordenaAristas(this.aristas, false);
+
+        for (HashMap.Entry<Integer, Arista> entry : aristas_sort.entrySet()) {
+            int one = entry.getValue().n1.idNodo;
+            int two = entry.getValue().n2.idNodo;
+            // System.out.println(entry.getValue().idArista + "-" + entry.getValue().peso +
+            // "[" + one + "," + two + "]");
+
+            if (arbol.nodos.get(one).cnj != arbol.nodos.get(two).cnj) {
+                Arista auxArista = new Arista();
+
+                auxArista.atributes = entry.getValue().atributes;
+                auxArista.idArista = entry.getValue().idArista;
+                auxArista.n1 = entry.getValue().n1;
+                auxArista.n2 = entry.getValue().n2;
+                auxArista.peso = entry.getValue().peso;
+
+                arbol.nodos.get(auxArista.n1.idNodo).hasArista = true;
+                arbol.nodos.get(auxArista.n2.idNodo).hasArista = true;
+                arbol.aristas.put(auxArista.idArista, auxArista);
+
+                int oldcnj = arbol.nodos.get(auxArista.n2.idNodo).cnj;
+                int newconj = arbol.nodos.get(auxArista.n1.idNodo).cnj;
+
+                for (HashMap.Entry<Integer, Nodo> entry2 : arbol.nodos.entrySet()) {
+                    if (entry2.getValue().cnj == oldcnj)
+                        entry2.getValue().cnj = newconj;
+                }
+
+            }
+        }
+        arbol.suma = arbol.sumaTotalAristas();
+        return arbol;
+    }
+
+    public Grafo Kruskal_I() {
+        Grafo arbol = new Grafo(this.numNodos());
+        int nodosTotales = this.numNodos();
+        HashMap<Integer, Arista> aristas_sort = ordenaAristas(this.aristas, true);
+
+        HashMap<Integer, Arista> aristas_originales = (this.aristas);
+        arbol.aristas = aristas_originales;
+
+        arbol.suma = arbol.sumaTotalAristas();
+
+        for (HashMap.Entry<Integer, Arista> entry : aristas_sort.entrySet()) {
+
+            Arista auxArista = new Arista();
+            auxArista.atributes = entry.getValue().atributes;
+            auxArista.idArista = entry.getValue().idArista;
+            auxArista.n1 = entry.getValue().n1;
+            auxArista.n2 = entry.getValue().n2;
+            auxArista.peso = entry.getValue().peso;
+
+            arbol.aristas.remove(entry.getKey());
+
+            int numNodos = arbol.BFS(1).numNodos();
+
+            if (numNodos != nodosTotales)
+                arbol.aristas.put(auxArista.idArista, auxArista);
+        }
+        arbol.suma = arbol.sumaTotalAristas();
+        return arbol;
+    }
+
+    public int minNode(HashMap<Integer, Nodo> n) {
+        double peso = Double.POSITIVE_INFINITY;
+        int min_node = 0;
+        for (HashMap.Entry<Integer, Nodo> entry : n.entrySet()) {
+            if (entry.getValue().distancia <= peso) {
+                peso = entry.getValue().distancia;
+                min_node = entry.getValue().idNodo;
+            }
+        }
+        return min_node;
+    }
+
+    public Grafo Prim() 
+    {
+        double infinito = Double.POSITIVE_INFINITY;
+        int nodosTotales = this.numNodos();
+
+        Grafo arbol = new Grafo();
+        HashMap<Integer, Nodo> nodosArbol = new HashMap<Integer, Nodo>();
+        HashMap<Integer, Arista> aristasArbol = new HashMap<Integer, Arista>();
+
+        int nodoMinimo;
+
+        for (HashMap.Entry<Integer, Nodo> entry : this.nodos.entrySet()) {
+            entry.getValue().distancia = infinito;
+        }
+        this.nodos.get(1).distancia = 0;
+
+        while (nodosArbol.size() != nodosTotales) {
+            nodoMinimo = minNode(this.nodos);
+
+            nodosArbol.put(nodoMinimo, this.nodos.get(nodoMinimo));
+            this.nodos.remove(nodoMinimo);
+
+            HashMap<Integer, Nodo> adyacentes = this.mapaAdyacentes(nodoMinimo);
+            HashSet<Arista> incidentes = this.obtieneIncidentes(nodoMinimo);
+
+            for (Arista a: incidentes)
+            {
+                if (a.n1.idNodo == nodoMinimo ||a.n2.idNodo== nodoMinimo)
+                {
+                    aristasArbol.put(this.aristas.get(a.idArista).idArista,this.aristas.get(a.idArista));
+                }
+            }
+          
+            for (HashMap.Entry<Integer, Nodo> entry : nodosArbol.entrySet()) {
+                adyacentes.remove(entry.getKey());
+            }
+
+            for (HashMap.Entry<Integer, Nodo> entry : adyacentes.entrySet()) {
+                for (Arista a : incidentes) {
+                    if (a.n1.idNodo == entry.getValue().idNodo || a.n2.idNodo == entry.getValue().idNodo) {
+                        double dist = this.nodos.get(entry.getValue().idNodo).distancia;
+                        if (a.peso < dist)
+                            this.nodos.get(entry.getValue().idNodo).distancia = a.peso;
+                    }
+                }
+
+            }
+        
+        }
+        arbol.nodos=nodosArbol;
+        arbol.aristas=aristasArbol;
+        arbol.suma = arbol.sumaTotalAristas();
+        return arbol;
+    }
 }

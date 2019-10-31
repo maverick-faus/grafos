@@ -5,9 +5,7 @@ public class MainGrafo {
   public static void main(String args[]) {
     Grafo g1 = new Grafo();
     // aristas,nodos,dirigido,autociclo
-    //g1.ErdosRenyi(10000, 500, false, false);
-    
-
+    g1.ErdosRenyi(10000,500, false, false);
 
     // nodos,proba,dirigido,autociclo
     // g1.Gilbert(500, (float) 0.5, false, false);
@@ -17,26 +15,25 @@ public class MainGrafo {
     // g1.Geo(30, .5, false, false);
 
     // nodos,factor,dirigido,autociclo
-     g1.BarabasiAlbert(30, 5, false, false);
-
-
+     //g1.BarabasiAlbert(10, 3, false, false);
 
     //-----------------------------
-    // Grafo arbolbfs = g1.BFS(1);
-    // arbolbfs.WriteFile("Barabasi_BFS", false, arbolbfs.numNodos());
 
-    // Grafo arboldfsr = g1.DFS_R(1);
-    // arboldfsr.WriteFile("Barabasi_DFS_R", false, arboldfsr.numNodos());
-
-    // Grafo arboldfsi = g1.DFS_I(1);
-    // arboldfsi.WriteFile("Barabasi_DFS_I", false, arboldfsi.numNodos());
-
-    //-----------------------------
     g1.RandomEdgeValues(1, 50);
-    Grafo dijk1 = g1.Dijkstra(1);
+    System.out.println("Peso total grafo: " + g1.sumaTotalAristas());
 
-    dijk1.WriteFileDijkstra("Dijkstra_Barabasi", false, dijk1.numNodos());
+    Grafo krD = g1. Kruskal_D();
+    krD.WriteFile("Erdos_KruskalD",false,krD.numNodos(),krD.suma);
+    System.out.println("Peso MSP KruskalD: " + krD.suma);
+    
 
-
+    Grafo krI = g1. Kruskal_I();
+    krI.WriteFile("Erdos_KruskalI",false,krI.numNodos(),krI.suma);
+    System.out.println("Peso MSP KruskalI: " + krI.suma);
+    
+    Grafo prim = g1.Prim();
+    prim.WriteFile("Erdos_Prim",false,prim.numNodos(),prim.suma);
+    System.out.println("Peso MSP Prim: " + prim.suma);
+ 
   }
 }

@@ -2,6 +2,7 @@ import java.util.HashMap;
 public class Nodo
 {
     public int idNodo;
+    public int cnj;
     public HashMap<String, Double> atributes;
     public boolean hasArista;
     public double distancia;
@@ -12,6 +13,7 @@ public class Nodo
     public Nodo(int id)
     {
         idNodo=id;
+        cnj=id;
         hasArista=false;
         atributes =new HashMap <String, Double> ();
     }
